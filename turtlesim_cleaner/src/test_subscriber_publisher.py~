@@ -1,0 +1,115 @@
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped
+import rospy
+import time
+
+def change_speed_msg(speed_msg_obj, cmd=' ', std_speed = 10):
+	speed_msg_obj.linear.y = 0
+	speed_msg_obj.linear.z = 0
+	speed_msg_obj.linear.x = 0
+	speed_msg_obj.angular.x = 0
+	speed_msg_obj.angular.y = 0
+	speed_msg_obj.angular.z = 0
+
+	if cmd == 'w':
+		speed_msg_obj.linear.x = std_speed
+	if cmd == 's':
+		speed_msg_obj.linear.x = -std_speed
+	if cmd == 'a':
+		speed_msg_obj.linear.y = std_speed
+	if cmd == 'd':
+		speed_msg_obj.linear.y = -std_speed 
+	return speed_msg_obj
+
+def check_correct_input(cmd):
+	return cmd != 'w' and cmd != 's' and cmd != 'a' and cmd!= 'd'
+
+def callback_0(pose):
+	# print(str(pose.pose.position.x))
+	#if count == 0:
+	#init_pos_0 = float(pose.pose.position.y)
+	#pos_0 = float(pose.pose.position.y)
+	return
+
+def callback_1(pose):
+	# print(str(pose.pose.position.x))
+	#if count == 0:
+	#init_pos_1 = float(pose.pose.position.x)
+	global pos_1
+	pos_1 = float(pose.pose.position.x)
+	#print(str(pose.pose.position.x))
+	return
+
+def main():
+	count =0
+
+
+	rospy.init_node('test_subscriber')	
+	
+	cmd_publisher_0 = rospy.Publisher('elisa3_robot_0/mobile_base/cmd_vel',Twist)
+	cmd_publisher_1 = rospy.Publisher('elisa3_robot_1/mobile_base/cmd_vel',Twist)
+
+	print('check here')
+
+	cmd_listener_0 = rospy.Subscriber("/rigid_body_1/pose", PoseStamped, callback_0)
+	cmd_listener_1 = rospy.Subscriber("/rigid_body_2/pose", PoseStamped, callback_1)
+
+	try:
+		dist_0 = float(raw_input('Robot 0 move distance [m]: [0,10]'))
+		dist_1 = float(raw_input('Robot 1 move distance [m]: [0,10]'))
+	except:
+		print('failure')
+		return
+
+	while True:
+		try:
+			#cmd = str(raw_input('Robot Movement command (up=w,down=s,left=a, or right=d): '))
+			speed_msg_0 = Twist()
+			speed_msg_1 = Twist()
+
+			
+			if count > 10:
+				cmd_publisher_0.publish(speed_msg_0)
+				cmd_publisher_1.publish(speed_msg_1)
+				return
+			count+=1
+			
+			global pos_1
+#			if (pos_0 - ini_pos_0) < dist_0:
+#				speed_msg_0.linear.x = 10.
+			if pos_1 < dist_1:
+				speed_msg_1.linear.x = 10.
+			else:
+				print(pos_1)			
+			#print('dit init_pos_1' +str(pos_1))
+			#print('hallo')
+			#print('dit init_pos_1' +str(init_pos_1))			
+			#print('dist1' +str(dist_1))
+
+			speed_msg_0.linear.x = 0.
+			speed_msg_1.linear.x = 10.
+			cmd_publisher_0.publish(speed_msg_0)
+			cmd_publisher_1.publish(speed_msg_1)
+			
+			time.sleep(1)
+			
+
+#			if cmd == 'exit':
+#				cmd_publisher.publish(speed_msg)
+#				return
+#			if check_correct_input(cmd):
+#				continue
+#			else:
+#				speed_msg = change_speed_msg(speed_msg, cmd)
+
+#			cmd_publisher.publish(speed_msg)
+				
+		except:
+			print('failure')
+
+
+if __name__ == '__main__' :
+	main()
+
+
